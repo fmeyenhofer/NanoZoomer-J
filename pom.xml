@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>sc.fiji</groupId>
+        <artifactId>pom-fiji</artifactId>
+        <version>21.0.0</version>
+        <relativePath />
+    </parent>
+
+    <packaging>jar</packaging>
+
+    <properties>
+        <scijava.jvm.version>1.8</scijava.jvm.version>
+        <license.copyrightOwners>Felix Meyenhofer</license.copyrightOwners>
+        <license.licenseName>GPLv3</license.licenseName>
+    </properties>
+
+    <groupId>ch.unifr.imagej</groupId>
+    <artifactId>nanozoomerj</artifactId>
+    <version>1.1.0-SNAPSHOT</version>
+    <name>NanoZoomer-J</name>
+    <description>Collection of plugins allowing to pre-process ndpi-files from the NanoZoomer</description>
+
+
+    <!--TODO: fill out general url and organisation-->
+    <url></url>
+    <inceptionYear>2015</inceptionYear>
+    <organization></organization>
+
+    <licenses>
+        <license>
+            <name>GPL3</name>
+            <url>http://www.gnu.org/licenses/gpl-3.0.en.html</url>
+            <distribution>Common Development and Distribution License (CDDL-1.0)</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>f.meyenhofer</id>
+            <name>Felix Meyenhofer</name>
+            <email>f.meyenhofer@me.com</email>
+            <url>https://github.com/Meyenhofer</url>
+            <timezone>+2</timezone>
+            <roles>
+                <role>lead</role>
+                <role>developer</role>
+                <role>debugger</role>
+                <role>reviewer</role>
+                <role>support</role>
+                <role>maintainer</role>
+            </roles>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git://github.com:Meyenhofer/NanoZoomer-J.git</connection>
+        <developerConnection>scm:git@github.com:Meyenhofer/NanoZoomer-J.git</developerConnection>
+        <tag>HEAD</tag>
+        <url>https://github.com/Meyenhofer/NanoZoomer-J</url>
+    </scm>
+
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/Meyenhofer/NanoZoomer-J/issues</url>
+    </issueManagement>
+
+    <mailingLists>
+        <mailingList>
+            <name>ImageJ Forum</name>
+            <archive>http://forum.imagej.net</archive>
+        </mailingList>
+    </mailingLists>
+
+    <repositories>
+        <repository>
+            <id>imagej.public</id>
+            <url>http://maven.imagej.net/content/groups/public</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>net.imagej</groupId>
+            <artifactId>imagej</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.scif</groupId>
+            <artifactId>scifio</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>ome</groupId>
+            <artifactId>formats-bsd</artifactId>
+            <version>5.1.7</version>
+        </dependency>
+        <dependency>
+            <groupId>ome</groupId>
+            <artifactId>formats-api</artifactId>
+            <version>5.1.7</version>
+        </dependency>
+        <dependency>
+            <groupId>ome</groupId>
+            <artifactId>formats-gpl</artifactId>
+            <version>5.1.7</version>
+        </dependency>
+        <dependency>
+            <groupId>ome</groupId>
+            <artifactId>formats-common</artifactId>
+            <version>5.1.7</version>
+        </dependency>
+        <dependency>
+            <groupId>ome</groupId>
+            <artifactId>bio-formats_plugins</artifactId>
+            <!--<scope>runtime</scope>-->
+            <version>5.1.7</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>gov.nih.imagej</groupId>
+                    <artifactId>imagej</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
+
+</project>
