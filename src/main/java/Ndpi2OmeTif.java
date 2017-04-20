@@ -78,18 +78,15 @@ public class Ndpi2OmeTif implements Command {
     @Parameter(label="Use channel name as file filter", callback = "enforceMatchChannelName")
     private boolean matchChannelName = true;
 
-    @Parameter(label="File name regexp")
-    private String regex = ".*(\\d{6})_.*_(\\d{1,2}).*_ROI(\\d{1,3}).*";
-
     @Parameter(label = "Output file compression", choices = {"LZW", "None"})
     private String compression = "LZW";
 
     @Parameter(visibility = ItemVisibility.MESSAGE)
-    private final String note = "<html><b>Note:</b><ul>" +
-            "<li>NDPI files have multiple series corresponding to different magnifications.<br>" +
-            "Use the Bio-Formats Importer to check which series you want to convert</li>" +
-            "<li>The regular expression is to extract the three groups: date, slice, roi.<br>" +
-            "Input an empty string to use the original name (only extension differs)</li></ul>";
+    private final String note = "<html>" +
+            "<p>The input folder is searched for ndpi-files or ndpis-files if the RGB channel option is selected</br>" +
+            "NDPI files have multiple series corresponding to different magnifications.<br>" +
+            "Use the Bio-Formats Importer to check which series you want to convert</p>" +
+            "</html>";
 
 
     // Services
@@ -119,8 +116,9 @@ public class Ndpi2OmeTif implements Command {
         int nfiles = fileList.size();
         int nfile = 1;
         for (File file : fileList) {
-            // Extract information for the input path
-            String fileName = reComposeFileName(file);
+            String fileName = FilenameUtils.removeExtension(file.getName());
+            fileName += (channelName.equals("RGB")) ? "" : ("_" + channelName);
+            fileName += ".ome.tif";
             File outputPath = new File(outputDir, fileName);
 
             logger.info("converting: " + file.getAbsolutePath());
@@ -142,31 +140,6 @@ public class Ndpi2OmeTif implements Command {
 
         status.showStatus("Converted " + nfiles + " ndpi-files to ome-tiff");
         logger.info("done.");
-    }
-
-    /**
-     * If a regular expression is defined the file name is re-arranged
-     * according to the matched groups
-     *
-     * @param file file name
-     * @return re-arranged file name
-     */
-    private String reComposeFileName(File file) {
-        if (regex.isEmpty())
-            return FilenameUtils.removeExtension(file.getName()) + ".ome.tif";
-
-        Pattern pattern = Pattern.compile(regex);
-        Matcher match = pattern.matcher(file.getName());
-        if (!(match.find() && match.groupCount() == 3))
-            throw new RuntimeException("The pattern '" + regex + "' could not extract date, slice and roi from the filename");
-
-        // Create the output file
-        DecimalFormat formatter = new DecimalFormat("00");
-
-        return match.group(1) +
-                "_" + channelName +
-                "_slice-" + formatter.format(Double.parseDouble(match.group(2))) +
-                "_roi-" + match.group(3) + ".ome.tif";
     }
 
     /**
