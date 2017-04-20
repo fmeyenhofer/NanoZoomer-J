@@ -14,6 +14,7 @@ import ome.xml.model.enums.PixelType;
 import ome.xml.model.primitives.PositiveInteger;
 import org.apache.commons.io.FilenameUtils;
 import org.scijava.ItemVisibility;
+import org.scijava.app.StatusService;
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
@@ -41,7 +42,6 @@ import java.util.regex.Pattern;
 public class Ndpi2OmeTif implements Command {
 
     // Hardcoded configs
-    private static final String NDPI_EXTENSION = ".ndpi";
     private static final HashMap<String, Integer> channelNameMapper;
     static
     {
@@ -52,30 +52,36 @@ public class Ndpi2OmeTif implements Command {
         channelNameMapper.put("Cy3", 1);
         channelNameMapper.put("TRIC", 0);
         channelNameMapper.put("Cy5", 0);
+        channelNameMapper.put("RGB", -1);
     }
 
 
     // Input Dialog
-    @Parameter(style = FileWidget.DIRECTORY_STYLE, label = "Input directory")
+    @Parameter(label = "Input directory", style = FileWidget.DIRECTORY_STYLE)
     private File inputDir;
 
-    @Parameter(style = FileWidget.DIRECTORY_STYLE, label = "Output directory")
+    @Parameter(label = "Output directory", style = FileWidget.DIRECTORY_STYLE)
     private File outputDir;
 
     // TODO: dialog callbacks (as soon as Curtis provides it)
     @Parameter(label = "Series to convert", style = NumberWidget.SPINNER_STYLE, min = "1", max = "5", stepSize = "1")
     private int series = 1;
 
-    @Parameter(choices = {"DAPI", "FITC", "Cy3", "TRIC", "Cy5"}, label = "Channel name")
-    private String channelName;
+    @Parameter(label = "Channel name", callback = "updateChannelIndex",
+            choices = {"DAPI", "FITC", "Cy3", "TRIC", "Cy5", "RGB"})
+    private String channelName = "DAPI";
 
-    @Parameter(label="Use channel name as file filter")
+    @Parameter(label = "Channel Index", callback = "enforceChannelIndex",
+            style = NumberWidget.SPINNER_STYLE, min = "-1", max = "2", stepSize = "1")
+    private int channelIndex = 2;
+
+    @Parameter(label="Use channel name as file filter", callback = "enforceMatchChannelName")
     private boolean matchChannelName = true;
 
     @Parameter(label="File name regexp")
     private String regex = ".*(\\d{6})_.*_(\\d{1,2}).*_ROI(\\d{1,3}).*";
 
-    @Parameter(choices = {"LZW", "None"}, label = "Output file compression")
+    @Parameter(label = "Output file compression", choices = {"LZW", "None"})
     private String compression = "LZW";
 
     @Parameter(visibility = ItemVisibility.MESSAGE)
@@ -90,6 +96,9 @@ public class Ndpi2OmeTif implements Command {
     @Parameter
     private LogService logger;
 
+    @Parameter
+    private StatusService status;
+
 
     /**
      * {@inheritDoc}
@@ -97,51 +106,48 @@ public class Ndpi2OmeTif implements Command {
     public void run() {
         IJ.run("Console", "uiservice=[org.scijava.ui.DefaultUIService [priority = 0.0]]");
 
-        // Prepare input
-        int colorIndex = channelNameMapper.get(channelName);
-        int seriesIndex = series - 1;
+        // Deduce file extension and filter string from the inputs
+        String fileExtension = (channelName.equals("RGB") ? ".ndpis" : "ndpi");
+        String fileNameFilter = (matchChannelName && !channelName.equals("RGB")) ? channelName : "";
 
-//        File outputDir = new File(inputDir.getParent(), "ome-tif");
-//        if (!outputDir.exists()) {
-//            if (outputDir.mkdir()) {
-//                logger.info("Created output directory: " + outputDir.getAbsolutePath());
-//            }
-//        }
-
-        // Process file by file
-        List<File> fileList = getNdpiFileList(inputDir, channelName);
-        int nfiles = fileList.size();
-        int nfile = 1;
+        // Get the file list
+        List<File> fileList = getNdpiFileList(inputDir, fileExtension, fileNameFilter);
         logger.info("Input directory: " + inputDir);
         logger.info("Found " + fileList.size() + " files.");
-        for (File file : fileList) {
-            IJ.showProgress(nfile++, nfiles);
 
+        // Process file by file
+        int nfiles = fileList.size();
+        int nfile = 1;
+        for (File file : fileList) {
             // Extract information for the input path
             String fileName = reComposeFileName(file);
             File outputPath = new File(outputDir, fileName);
 
             logger.info("converting: " + file.getAbsolutePath());
-            logger.info("        to: " + outputPath.getAbsolutePath());
             if (outputPath.exists()) {
                 logger.info("        already processed");
                 continue;
+            } else {
+                logger.info("        to: " + outputPath.getAbsolutePath());
             }
 
             try {
-                convert(file.getAbsolutePath(), seriesIndex, colorIndex, outputPath.getAbsolutePath());
+                convert(file.getAbsolutePath(), series - 1, channelIndex, outputPath.getAbsolutePath());
             } catch (IOException | FormatException | ServiceException | DependencyException | EnumerationException e) {
                 logger.error(e);
             }
+
+            status.showProgress(nfile++, nfiles);
         }
 
-        IJ.showStatus("Converted " + nfiles + " ndpi-files to ome-tiff");
+        status.showStatus("Converted " + nfiles + " ndpi-files to ome-tiff");
         logger.info("done.");
     }
 
     /**
      * If a regular expression is defined the file name is re-arranged
      * according to the matched groups
+     *
      * @param file file name
      * @return re-arranged file name
      */
@@ -165,6 +171,7 @@ public class Ndpi2OmeTif implements Command {
 
     /**
      * Convert a a given series of the input file
+     *
      * @param inId input file path
      * @param outSeries series to write to the output file
      * @param outColInd color index to be written to the output (0->red, 1->green, 2->blue)
@@ -177,6 +184,7 @@ public class Ndpi2OmeTif implements Command {
      */
     private void convert(String inId, int outSeries, int outColInd, String outId)
             throws IOException, FormatException, DependencyException, ServiceException, EnumerationException {
+
         // Record metadata to OME-XML format
         ServiceFactory factory = new ServiceFactory();
         OMEXMLService service = factory.getInstance(OMEXMLService.class);
@@ -187,26 +195,6 @@ public class Ndpi2OmeTif implements Command {
         channelSeparator.setMetadataStore(inMeta);
         channelSeparator.setId(inId);
         channelSeparator.setSeries(outSeries);
-
-        int numCol = 3;//(channelSeparator.isRGB()) ? 3 : 1;
-        int inPlanes = channelSeparator.getImageCount();
-        int outPlanes = (inPlanes >= 3) ? inPlanes / numCol : inPlanes;
-
-        // This would be the code to start from scratch with the meta data
-//        ServiceFactory factory = new ServiceFactory();
-//        OMEXMLService service = factory.getInstance(OMEXMLService.class);
-//        IMetadata outMeta = service.createOMEXMLMetadata();
-//        MetadataTools.populateMetadata(outMeta,
-//                0,
-//                null,
-//                false,
-//                "XYZCT",
-//                FormatTools.getPixelTypeString(FormatTools.UINT8),
-//                channelSeparator.getSizeX(),
-//                channelSeparator.getSizeY(),
-//                channelSeparator.getImageCount() / numCol,
-//                1, 1, 1);
-
 
         // Clone the metadata and remove all the series in the metadata except the one we process
         OMEXMLMetadata outMeta = service.createOMEXMLMetadata(inMeta.dumpXML());
@@ -219,10 +207,18 @@ public class Ndpi2OmeTif implements Command {
         }
         outMeta.setRoot(root);
 
+        // Deduce the output image dimensions
+        int numCol = 3;//(channelSeparator.isRGB()) ? 3 : 1;
+        int inPlanes = channelSeparator.getImageCount();
+        int planeStartIndex = (outColInd == -1) ? 0 : outColInd;
+        int planeIncrement = (outColInd == -1) ? 1 : 3;
+        int pixelSizeC = (outColInd == -1) ? 3 : 1;
+        int pixelSizeZ = (inPlanes >= 3) ? inPlanes / numCol : 1;
+
         // Adjust the metadata attributes affected during this process.
         outMeta.setImageName(null, 0);
-        outMeta.setPixelsSizeC(new PositiveInteger(1), 0);
-        outMeta.setPixelsSizeZ(new PositiveInteger(outPlanes), 0);
+        outMeta.setPixelsSizeC(new PositiveInteger(pixelSizeC), 0);
+        outMeta.setPixelsSizeZ(new PositiveInteger(pixelSizeZ), 0);
         outMeta.setPixelsSizeT(new PositiveInteger(1), 0);
         outMeta.setPixelsBinDataBigEndian(Boolean.FALSE, 0, 0);
         outMeta.setPixelsDimensionOrder(DimensionOrder.fromString("XYZCT"), 0);
@@ -240,7 +236,7 @@ public class Ndpi2OmeTif implements Command {
         // Copy the planes
         int outPlaneInd = 0;
         byte[] img = new byte[channelSeparator.getSizeX() * channelSeparator.getSizeY()];
-        for (int inPlaneInd = outColInd; inPlaneInd < inPlanes; inPlaneInd += numCol) {
+        for (int inPlaneInd = planeStartIndex; inPlaneInd < inPlanes; inPlaneInd += planeIncrement) {
             logger.info("        writing plane: " + outPlaneInd);
             channelSeparator.openBytes(inPlaneInd, img);
             writer.saveBytes(outPlaneInd++, img);
@@ -253,26 +249,56 @@ public class Ndpi2OmeTif implements Command {
 
     /**
      * Get the list of ndpi files for a given input directory
+     *
      * @param inputDir directory containing the input files
      * @param filter string that has to be contained in the file name
      * @return list of files in inputDir containing the filter string
      */
-    private List<File> getNdpiFileList(File inputDir, String filter) {
+    private List<File> getNdpiFileList(File inputDir, String extension, String filter) {
         List<File> list = new ArrayList<File>();
         filter = filter.toLowerCase();
 
         File[] content = inputDir.listFiles();
         if (content != null) {
             for (File file : content) {
-                if (!matchChannelName ||
-                        file.getName().toLowerCase().contains(NDPI_EXTENSION.toLowerCase()) &&
-                        file.getName().toLowerCase().contains(filter)) {
-                    list.add(file);
+                if (file.getName().toLowerCase().contains(extension)) {
+                    if (!matchChannelName || file.getName().toLowerCase().split(" - ")[1].contains(filter)) {
+                        list.add(file);
+                    }
                 }
             }
         }
 
         return list;
+    }
+
+    /**
+     * Callback for the channel name combobox
+     */
+    protected void updateChannelIndex() {
+        channelIndex = channelNameMapper.get(channelName);
+    }
+
+    /**
+     * Callbeck for the channel index spinner
+     */
+    protected void enforceChannelIndex() {
+        if (channelName.equals("RGB") && (channelIndex != -1)) {
+            channelIndex = -1;
+            logger.warn("If the channel selection is RGB, all channels are converted " +
+                    "(-1) and the channel index is overridden.");
+        }
+    }
+
+    /**
+     * Callback for the channel matcher checkbox
+     */
+    protected void enforceMatchChannelName() {
+        if (channelName.equals("RGB") && matchChannelName) {
+            matchChannelName = false;
+            logger.warn("If the channel selection is RGB the ndpis-files are used, " +
+                    "which do not contain a channel sequence in the file name");
+        }
     }
 
     /**
