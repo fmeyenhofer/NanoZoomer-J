@@ -2,7 +2,7 @@
 
 NanoZoomer-J is a collection of [ImageJ][imagej] plugins to deal with the 
 NDPI image file format. 
-The "NDPI 2 OME-TIF" converter uses [Bio-Formats][bf] to convert the propriatary 
+The "NDPI 2 OME-TIF" converter uses [Bio-Formats][bf] to convert the proprietary 
 file format to the open ome-tif without loading the entire file into memory, 
 which is important given that ndpi-files may contain a lot of data.
 

@@ -43,7 +43,7 @@ public class NdpiTileColorSeparator implements Command {
     private List<File> tileList;
 
 
-    // Hardcoded paramter
+    // Hardcoded parameter
     private static final String TILE_EXTENSION = ".tif";
     private static final int RED = 1;
     private static final int GREEN = 2;
@@ -81,9 +81,6 @@ public class NdpiTileColorSeparator implements Command {
     @Parameter
     private LogService logger;
 
-    @Parameter
-    SCIFIO scifio;
-
 
     /**
      * {@inheritDoc}
@@ -106,6 +103,12 @@ public class NdpiTileColorSeparator implements Command {
                 try {
                     while (!tileList.isEmpty()) {
                         List<File> stackList = nextStackFileSet();
+
+                        if (stackList == null) {
+                            logger.error("could not find any planes in the above file.");
+                            return;
+                        }
+
                         if (processRed)
                             rgbTiffs2GcStack(stackList, RED);
 
@@ -182,7 +185,7 @@ public class NdpiTileColorSeparator implements Command {
         if (files == null || files.length == 0)
             return null;
 
-        ArrayList<File> subDirectories = new ArrayList<File>();
+        ArrayList<File> subDirectories = new ArrayList<>();
         for (File file : files)
             if (file.isDirectory())
                 subDirectories.add(file);
@@ -197,7 +200,7 @@ public class NdpiTileColorSeparator implements Command {
      * @return list of tile files
      */
     private ArrayList<File> getTifTiles(File inputDir, String filter) {
-        ArrayList<File> list = new ArrayList<File>();
+        ArrayList<File> list = new ArrayList<>();
 
         File[] content = inputDir.listFiles();
         if (content != null) {
@@ -216,7 +219,7 @@ public class NdpiTileColorSeparator implements Command {
      * @return get the next files belonging to one tile (several in case it's a stack)
      */
     private List<File> nextStackFileSet() {
-        List<File> files = new ArrayList<File>();
+        List<File> files = new ArrayList<>();
 
         String[] refParts = FilenameUtils.removeExtension(tileList.get(0).getName()).split("_");
         if (refParts.length == 2) { // There is one single z-plane
@@ -252,11 +255,12 @@ public class NdpiTileColorSeparator implements Command {
      *
      * @param inpFiles list of files (one for a single image, several for stacks)
      * @param color the channel/color to be extracted
-     * @throws loci.common.services.DependencyException
-     * @throws ServiceException
-     * @throws IOException
-     * @throws loci.formats.FormatException
+     * @throws loci.common.services.DependencyException {@inheritDoc}
+     * @throws ServiceException {@inheritDoc}
+     * @throws IOException Could not open image file
+     * @throws loci.formats.FormatException {@inheritDoc}
      */
+    @SuppressWarnings("JavaDoc")
     private void rgbTiffs2GcStack(List<File> inpFiles, int color) throws
             DependencyException,
             ServiceException,
@@ -362,9 +366,8 @@ public class NdpiTileColorSeparator implements Command {
     /**
      * Test
      * @param args input arguments
-     * @throws Exception anything that can go wrong
      */
-    public static void main(final String... args) throws Exception {
+    public static void main(final String... args) {
         final ImageJ ij = net.imagej.Main.launch(args);
         ij.command().run(NdpiTileColorSeparator.class, true);
     }

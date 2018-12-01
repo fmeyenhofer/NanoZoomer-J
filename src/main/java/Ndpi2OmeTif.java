@@ -24,12 +24,9 @@ import org.scijava.widget.NumberWidget;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 /**
@@ -50,7 +47,7 @@ public class Ndpi2OmeTif implements Command {
         channelNameMapper.put("DAPI", 2);
         channelNameMapper.put("FITC", 1);
         channelNameMapper.put("Cy3", 1);
-        channelNameMapper.put("TRIC", 0);
+        channelNameMapper.put("TRITC", 0);
         channelNameMapper.put("Cy5", 0);
         channelNameMapper.put("RGB", -1);
     }
@@ -68,7 +65,7 @@ public class Ndpi2OmeTif implements Command {
     private int series = 1;
 
     @Parameter(label = "Channel name", callback = "updateChannelIndex",
-            choices = {"DAPI", "FITC", "Cy3", "TRIC", "Cy5", "RGB"})
+            choices = {"DAPI", "FITC", "Cy3", "TRITC", "Cy5", "RGB"})
     private String channelName = "DAPI";
 
     @Parameter(label = "Channel Index", callback = "enforceChannelIndex",
@@ -90,9 +87,11 @@ public class Ndpi2OmeTif implements Command {
 
 
     // Services
+    @SuppressWarnings("unused")
     @Parameter
     private LogService logger;
 
+    @SuppressWarnings("unused")
     @Parameter
     private StatusService status;
 
@@ -149,12 +148,13 @@ public class Ndpi2OmeTif implements Command {
      * @param outSeries series to write to the output file
      * @param outColInd color index to be written to the output (0->red, 1->green, 2->blue)
      * @param outId output file
-     * @throws IOException
-     * @throws FormatException
-     * @throws DependencyException
-     * @throws ServiceException
-     * @throws EnumerationException
+     * @throws IOException Image file cannot be opened
+     * @throws FormatException {@inheritDoc}
+     * @throws DependencyException {@inheritDoc}
+     * @throws ServiceException {@inheritDoc}
+     * @throws EnumerationException {@inheritDoc}
      */
+    @SuppressWarnings("JavaDoc")
     private void convert(String inId, int outSeries, int outColInd, String outId)
             throws IOException, FormatException, DependencyException, ServiceException, EnumerationException {
 
@@ -228,7 +228,7 @@ public class Ndpi2OmeTif implements Command {
      * @return list of files in inputDir containing the filter string
      */
     private List<File> getNdpiFileList(File inputDir, String extension, String filter) {
-        List<File> list = new ArrayList<File>();
+        List<File> list = new ArrayList<>();
         filter = filter.toLowerCase();
 
         File[] content = inputDir.listFiles();
@@ -248,13 +248,15 @@ public class Ndpi2OmeTif implements Command {
     /**
      * Callback for the channel name combobox
      */
+    @SuppressWarnings("unused")
     protected void updateChannelIndex() {
         channelIndex = channelNameMapper.get(channelName);
     }
 
     /**
-     * Callbeck for the channel index spinner
+     * Callback for the channel index spinner
      */
+    @SuppressWarnings("unused")
     protected void enforceChannelIndex() {
         if (channelName.equals("RGB") && (channelIndex != -1)) {
             channelIndex = -1;
@@ -266,6 +268,7 @@ public class Ndpi2OmeTif implements Command {
     /**
      * Callback for the channel matcher checkbox
      */
+    @SuppressWarnings("unused")
     protected void enforceMatchChannelName() {
         if (channelName.equals("RGB") && matchChannelName) {
             matchChannelName = false;
@@ -277,9 +280,8 @@ public class Ndpi2OmeTif implements Command {
     /**
      * Test
      * @param args input arguments
-     * @throws Exception anything that can go wrong
      */
-    public static void main(final String... args) throws Exception {
+    public static void main(final String... args) {
         final ImageJ ij = net.imagej.Main.launch(args);
         ij.command().run(Ndpi2OmeTif.class, true);
     }

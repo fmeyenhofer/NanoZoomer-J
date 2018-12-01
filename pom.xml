@@ -26,11 +26,12 @@
     <name>NanoZoomer-J</name>
     <description>Collection of plugins allowing to pre-process ndpi-files from the NanoZoomer</description>
 
-
-    <!--TODO: fill out general url and organisation-->
-    <url></url>
+    <url>https://github.com/fmeyenhofer</url>
     <inceptionYear>2015</inceptionYear>
-    <organization></organization>
+    <organization>
+        <name>University of Fribourg</name>
+        <url>www.unifr.ch</url>
+    </organization>
 
     <licenses>
         <license>
