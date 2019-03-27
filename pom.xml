@@ -6,20 +6,20 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>sc.fiji</groupId>
-        <artifactId>pom-fiji</artifactId>
-        <version>21.0.0</version>
+        <groupId>org.scijava</groupId>
+        <artifactId>pom-scijava</artifactId>
+        <version>25.0.0</version>
         <relativePath />
     </parent>
-
-    <packaging>jar</packaging>
 
     <properties>
         <scijava.jvm.version>1.8</scijava.jvm.version>
         <license.copyrightOwners>Felix Meyenhofer</license.copyrightOwners>
         <license.licenseName>GPLv3</license.licenseName>
+        <enforcer.skip>true</enforcer.skip>
     </properties>
 
+    <packaging>jar</packaging>
     <groupId>ch.unifr.imagej</groupId>
     <artifactId>nanozoomerj</artifactId>
     <version>1.1.1-SNAPSHOT</version>
@@ -59,16 +59,22 @@
         </developer>
     </developers>
 
+    <contributors>
+        <contributor>
+            <name>None</name>
+        </contributor>
+    </contributors>
+
     <scm>
-        <connection>scm:git://github.com:Meyenhofer/NanoZoomer-J.git</connection>
-        <developerConnection>scm:git@github.com:Meyenhofer/NanoZoomer-J.git</developerConnection>
+        <connection>scm:git://github.com:fmeyenhofer/NanoZoomer-J.git</connection>
+        <developerConnection>scm:git@github.com:fmeyenhofer/NanoZoomer-J.git</developerConnection>
         <tag>HEAD</tag>
-        <url>https://github.com/Meyenhofer/NanoZoomer-J</url>
+        <url>https://github.com/fmeyenhofer/NanoZoomer-J</url>
     </scm>
 
     <issueManagement>
         <system>GitHub Issues</system>
-        <url>https://github.com/Meyenhofer/NanoZoomer-J/issues</url>
+        <url>https://github.com/fmeyenhofer/NanoZoomer-J/issues</url>
     </issueManagement>
 
     <mailingLists>
@@ -77,6 +83,10 @@
             <archive>http://forum.imagej.net</archive>
         </mailingList>
     </mailingLists>
+
+    <ciManagement>
+        <system>None</system>
+    </ciManagement>
 
     <repositories>
         <repository>
@@ -94,32 +104,15 @@
             <groupId>io.scif</groupId>
             <artifactId>scifio</artifactId>
         </dependency>
-
         <dependency>
-            <groupId>ome</groupId>
-            <artifactId>formats-bsd</artifactId>
-            <version>5.1.7</version>
-        </dependency>
-        <dependency>
-            <groupId>ome</groupId>
-            <artifactId>formats-api</artifactId>
-            <version>5.1.7</version>
-        </dependency>
-        <dependency>
-            <groupId>ome</groupId>
-            <artifactId>formats-gpl</artifactId>
-            <version>5.1.7</version>
-        </dependency>
-        <dependency>
-            <groupId>ome</groupId>
-            <artifactId>formats-common</artifactId>
-            <version>5.1.7</version>
+            <groupId>org.scijava</groupId>
+            <artifactId>scijava-common</artifactId>
         </dependency>
         <dependency>
             <groupId>ome</groupId>
             <artifactId>bio-formats_plugins</artifactId>
             <!--<scope>runtime</scope>-->
-            <version>5.1.7</version>
+            <!--<version>5.1.7</version>-->
             <exclusions>
                 <exclusion>
                     <groupId>gov.nih.imagej</groupId>
@@ -128,5 +121,4 @@
             </exclusions>
         </dependency>
     </dependencies>
-
 </project>
