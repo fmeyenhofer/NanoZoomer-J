@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
  * @author Felix Meyenhofer
  *         creation: 21.10.15
  */
-@Plugin(type = Command.class, menuPath = "Plugins > NanoZoomer > Tif-Tiles Color Separation")
+@Plugin(type = Command.class, menuPath = "Plugins > NanoZoomer NDPI > Tif-Tiles Color Separation")
 public class NdpiTileColorSeparator implements Command {
 
     /** Debug switch */
