@@ -1,4 +1,10 @@
 import ij.IJ;
+
+import loci.common.services.ServiceFactory;
+import loci.formats.ome.OMEXMLMetadata;
+import loci.formats.services.OMEXMLService;
+import net.imagej.ImageJ;
+
 import loci.common.services.DependencyException;
 import loci.common.services.ServiceException;
 import loci.common.services.ServiceFactory;
@@ -16,7 +22,10 @@ import org.apache.commons.io.FilenameUtils;
 import org.scijava.ItemVisibility;
 import org.scijava.app.StatusService;
 import org.scijava.command.Command;
+import org.scijava.Initializable;
+import org.scijava.command.DynamicCommand;
 import org.scijava.log.LogService;
+import org.scijava.module.MutableModuleItem;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.widget.FileWidget;
@@ -25,7 +34,6 @@ import org.scijava.widget.NumberWidget;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 
@@ -33,24 +41,9 @@ import java.util.List;
  * Convert a given series from a NDPI file to OME-TIF
  *
  * @author Felix Meyenhofer
- *         creation: 13.10.15
  */
-@Plugin(type = Command.class, menuPath = "Plugins > NanoZoomer > NPDI 2 OME-TIF")
-public class Ndpi2OmeTif implements Command {
-
-    // Hardcoded configs
-    private static final HashMap<String, Integer> channelNameMapper;
-    static
-    {
-        channelNameMapper = new HashMap<>();
-        channelNameMapper.put("", null);
-        channelNameMapper.put("DAPI", 2);
-        channelNameMapper.put("FITC", 1);
-        channelNameMapper.put("Cy3", 1);
-        channelNameMapper.put("TRITC", 0);
-        channelNameMapper.put("Cy5", 0);
-        channelNameMapper.put("RGB", -1);
-    }
+@Plugin(type = Command.class, menuPath = "Plugins > NanoZoomer NDPI > Single Channel 2 OME-TIF")
+public class Ndpi2OmeTif extends DynamicCommand implements Command, Initializable {
 
 
     // Input Dialog
@@ -64,8 +57,7 @@ public class Ndpi2OmeTif implements Command {
     @Parameter(label = "Series to convert", style = NumberWidget.SPINNER_STYLE, min = "1", max = "5", stepSize = "1")
     private int series = 1;
 
-    @Parameter(label = "Channel name", callback = "updateChannelIndex",
-            choices = {"DAPI", "FITC", "Cy3", "TRITC", "Cy5", "RGB"})
+    @Parameter(label = "Channel name", callback = "updateChannelIndex")
     private String channelName = "DAPI";
 
     @Parameter(label = "Channel Index", callback = "enforceChannelIndex",
@@ -80,18 +72,16 @@ public class Ndpi2OmeTif implements Command {
 
     @Parameter(visibility = ItemVisibility.MESSAGE)
     private final String note = "<html>" +
-            "<p>The input folder is searched for ndpi-files or ndpis-files if the RGB channel option is selected</br>" +
+            "<p>The input folder is searched for ndpi-files or ndpis-files if the RGB channel option is selected<br>" +
             "NDPI files have multiple series corresponding to different magnifications.<br>" +
             "Use the Bio-Formats Importer to check which series you want to convert</p>" +
             "</html>";
 
 
     // Services
-    @SuppressWarnings("unused")
     @Parameter
     private LogService logger;
 
-    @SuppressWarnings("unused")
     @Parameter
     private StatusService status;
 
@@ -99,12 +89,25 @@ public class Ndpi2OmeTif implements Command {
     /**
      * {@inheritDoc}
      */
+    @Override
+    public void initialize() {
+        final MutableModuleItem<String> item = getInfo().getMutableInput("Channel name", String.class);
+        item.setChoices(HTplusFluo.Channel.getNames());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void run() {
         IJ.run("Console", "uiservice=[org.scijava.ui.DefaultUIService [priority = 0.0]]");
 
         // Deduce file extension and filter string from the inputs
         String fileExtension = (channelName.equals("RGB") ? ".ndpis" : "ndpi");
         String fileNameFilter = (matchChannelName && !channelName.equals("RGB")) ? channelName : "";
+
+        logger.info("File extension: " + fileExtension);
+        logger.info("File name filter: " + fileNameFilter);
 
         // Get the file list
         List<File> fileList = getNdpiFileList(inputDir, fileExtension, fileNameFilter);
@@ -130,7 +133,11 @@ public class Ndpi2OmeTif implements Command {
 
             try {
                 convert(file.getAbsolutePath(), series - 1, channelIndex, outputPath.getAbsolutePath());
-            } catch (IOException | FormatException | ServiceException | DependencyException | EnumerationException e) {
+            } catch (IOException |
+                    FormatException |
+                    ServiceException |
+                    DependencyException |
+                    EnumerationException e) {
                 logger.error(e);
             }
 
@@ -235,7 +242,7 @@ public class Ndpi2OmeTif implements Command {
         if (content != null) {
             for (File file : content) {
                 if (file.getName().toLowerCase().contains(extension)) {
-                    if (!matchChannelName || file.getName().toLowerCase().split(" - ")[1].contains(filter)) {
+                    if (!matchChannelName || file.getName().toLowerCase().contains(filter)) {
                         list.add(file);
                     }
                 }
@@ -250,7 +257,7 @@ public class Ndpi2OmeTif implements Command {
      */
     @SuppressWarnings("unused")
     protected void updateChannelIndex() {
-        channelIndex = channelNameMapper.get(channelName);
+        channelIndex = HTplusFluo.Channel.get(channelName).getColorIndex();
     }
 
     /**
@@ -278,11 +285,12 @@ public class Ndpi2OmeTif implements Command {
     }
 
     /**
-     * Test
+     * Run
+     *
      * @param args input arguments
      */
     public static void main(final String... args) {
-        final ImageJ ij = net.imagej.Main.launch(args);
+        final ImageJ ij = new net.imagej.ImageJ();
         ij.command().run(Ndpi2OmeTif.class, true);
     }
 }
