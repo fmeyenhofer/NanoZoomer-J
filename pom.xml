@@ -8,7 +8,7 @@
     <parent>
         <groupId>org.scijava</groupId>
         <artifactId>pom-scijava</artifactId>
-        <version>25.0.0</version>
+        <version>34.1.0</version>
         <relativePath />
     </parent>
 
@@ -22,7 +22,7 @@
     <packaging>jar</packaging>
     <groupId>ch.unifr.imagej</groupId>
     <artifactId>nanozoomer_j</artifactId>
-    <version>1.2.1-SNAPSHOT</version>
+    <version>1.2.2-SNAPSHOT</version>
 
     <name>NanoZoomer-J</name>
     <description>Collection of plugins allowing to pre-process ndpi-files from the NanoZoomer</description>
@@ -81,7 +81,7 @@
     <mailingLists>
         <mailingList>
             <name>ImageJ Forum</name>
-            <archive>http://forum.imagej.net</archive>
+            <archive>https://forum.imagej.net</archive>
         </mailingList>
     </mailingLists>
 
@@ -92,7 +92,7 @@
     <repositories>
         <repository>
             <id>imagej.public</id>
-            <url>http://maven.imagej.net/content/groups/public</url>
+            <url>https://maven.imagej.net/content/groups/public</url>
         </repository>
     </repositories>
 
