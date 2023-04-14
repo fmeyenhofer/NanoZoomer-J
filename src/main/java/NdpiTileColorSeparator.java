@@ -29,11 +29,8 @@ import java.util.regex.Pattern;
  * Tile naming: XXXX_YYYY.tif (single layer z)
  *              ZZZZ_XXXX_YYYY (multilayer z)
  * The tiles index starts from the upper left corner.
- *
- * @author Felix Meyenhofer
- *         creation: 21.10.15
  */
-@Plugin(type = Command.class, menuPath = "Plugins > NanoZoomer NDPI > Tif-Tiles Color Separation")
+@Plugin(type = Command.class, menuPath = "Plugins > NDPI Converter > TIF-Tiles Color Separation")
 public class NdpiTileColorSeparator implements Command {
 
     /** Debug switch */

@@ -34,11 +34,9 @@ import java.util.List;
 
 
 /**
- * Convert a given series from a NDPI file to OME-TIF
- *
- * @author Felix Meyenhofer
+ * Convert a given series from a NDPI file to OME-TI
  */
-@Plugin(type = Command.class, menuPath = "Plugins > NanoZoomer NDPI > Single Channel 2 OME-TIF")
+@Plugin(type = Command.class, menuPath = "Plugins > NDPI Converter > Single Channel OME-TIF Converter")
 public class Ndpi2OmeTif extends DynamicCommand implements Command, Initializable {
 
 
@@ -287,6 +285,7 @@ public class Ndpi2OmeTif extends DynamicCommand implements Command, Initializabl
      */
     public static void main(final String... args) {
         final ImageJ ij = new net.imagej.ImageJ();
+        ij.ui().showUI();
         ij.command().run(Ndpi2OmeTif.class, true);
     }
 }

@@ -16,10 +16,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-/**
- * @author Felix Meyenhofer
- */
-@Plugin(type = Command.class, menuPath = "Plugins > NanoZoomer NDPI > Batch OME-TIF Converter")
+
+@Plugin(type = Command.class, menuPath = "Plugins > NDPI Converter > Batch OME-TIF Converter")
 public class BatchConverter implements Command {
 
     @Parameter
@@ -126,7 +124,6 @@ public class BatchConverter implements Command {
     public static void main(String[] args) {
         ImageJ ij = new ImageJ();
         ij.ui().showUI();
-
         ij.command().run(BatchConverter.class, true);
     }
 }

@@ -10,8 +10,6 @@ import java.util.List;
 
 /**
  * Dialog to make a ordered selection among listed items.
- *
- * @author Felix Meyenhofer
  */
 public class BatchConverterDialog extends JDialog implements ActionListener, ListSelectionListener, KeyListener {
 
