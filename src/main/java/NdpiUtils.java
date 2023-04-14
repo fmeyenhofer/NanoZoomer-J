@@ -19,9 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-/**
- * @author Felix Meyenhofer
- */
+
 class NdpiUtils {
 
     static HashMap<HTplusFluo.Channel, List<File>> getFiles(File directory) {
@@ -94,6 +92,7 @@ class NdpiUtils {
 
         int sizeC = inIds.keySet().size();
         String firstId = inIds.values().iterator().next();
+        HTplusFluo.Channel inType = inIds.keySet().iterator().next();
 
         // Record metadata to OME-XML format
         ServiceFactory factory = new ServiceFactory();
@@ -112,6 +111,12 @@ class NdpiUtils {
         int planeIncrement = (channelSeparator.isRGB()) ? 1 : 3;
         int pixelSizeC = (channelSeparator.isRGB()) ? 3 : sizeC;
         int pixelSizeZ = inPlanes / numCol;
+
+        // Overwrite dimensions if input is Brightfield type
+        if (inType.equals(HTplusFluo.Channel.RGB)) {
+            pixelSizeC = 3;
+            planeIncrement = 1;
+        }
 
         // Clone the metadata and remove all the series in the metadata except the one we process
         OMEXMLMetadata outMeta = service.createOMEXMLMetadata(inMeta.dumpXML());
@@ -140,7 +145,6 @@ class NdpiUtils {
         outMeta.setPixelsDimensionOrder(DimensionOrder.fromString("XYZCT"), 0);
         outMeta.setPixelsType(PixelType.fromString(FormatTools.getPixelTypeString(FormatTools.UINT8)), 0);
 
-
         // Setup the writer
         ImageWriter writer = new ImageWriter();
 
@@ -157,7 +161,6 @@ class NdpiUtils {
         for (HTplusFluo.Channel channel: inIds.keySet()) {
             channelSeparator.setId(inIds.get(channel));
             channelSeparator.setSeries(inSeries);
-
 
             for (int inPlaneInd = channel.getColorIndex(); inPlaneInd < inPlanes; inPlaneInd += planeIncrement) {
 //            logger.info("        writing plane: " + outPlaneInd);

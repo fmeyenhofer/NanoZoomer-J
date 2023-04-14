@@ -6,9 +6,7 @@ import java.util.List;
 
 
 /**
- * Conventions for the NanoZoomer model HT+Fluo v2.0
- *
- * @author Felix Meyenhofer
+ * Conventions for the NanoZoomer model HT 2.0 (+Fluo)
  */
 
 class HTplusFluo {
@@ -21,7 +19,7 @@ class HTplusFluo {
         CY3   ("Cy3", 1),
         TRITC ("TRITC", 0),
         CY5   ("Cy5", 0),
-        RGB   ("RGB", -1);
+        RGB   ("RGB", 0);
 
         private String name;
         private int index;
@@ -69,11 +67,12 @@ class HTplusFluo {
                 if (file.getName().contains(ch.getName())) {
                     return ch;
                 }
+                if (ch.getName().equals(Channel.RGB.getName())) { // The last option
+                    return ch;
+                }
             }
 
             return null;
         }
-
-
     }
 }
