@@ -1,3 +1,7 @@
+> [!CAUTION]
+> This plugin is not maintained anymore.
+> We recommend to use [QuPath](https://qupath.github.io) to handle whole slide images. 
+
 # NanoZoomer-J
 
 NanoZoomer-J is a small collection of [ImageJ][imagej] plugins to deal with the 
